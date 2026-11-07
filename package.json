@@ -1,0 +1,28 @@
+{
+  "name": "m01014266_cst3144_express",
+  "version": "1.0.0",
+  "description": "Express.js for the backend of a fictitious web app which allows students and their parents to buy after school classes and activities.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meganeMDX/M01014266_CST3144_Express.git"
+  },
+  "author": "Megane Coret",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/meganeMDX/M01014266_CST3144_Express/issues"
+  },
+  "homepage": "https://github.com/meganeMDX/M01014266_CST3144_Express#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "mongodb": "^7.8.0",
+    "morgan": "^1.12.1",
+    "nodemon": "^3.1.14"
+  }
+}
