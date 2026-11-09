@@ -30,6 +30,16 @@ class dbHandler{
             throw err;
         }
     }
+
+    // get list of lessons and activities
+    async getLessons(){
+        return await this.lessonsCollection.find({}).toArray();
+    }
+    
+    // get list of teachers
+    async getTeachers(){
+        return await this.teachersCollection.find({}).toArray();
+    }
 }
 
 let dbManager = new dbHandler();
