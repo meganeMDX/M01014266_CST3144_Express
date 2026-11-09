@@ -124,6 +124,19 @@ app.get("/teachers", async function(req, res)
     }
 });
 
+// returns number of slots purchased for a lesson
+app.get("/enrolment/:lessonid", async function(req, res)
+{
+    const lessonID = req.params.lessonid;
+    try{
+        const enrolmentNum = await dbManager.getEnrolment(lessonID);
+        res.status(200).json(enrolmentNum);
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: `Failed to retrieve the enrolment number for lesson ${lessonID}.`})
+    }
+})
 
 app.use((err, req, res) => {
     res.status(404).send("Page not found !")
