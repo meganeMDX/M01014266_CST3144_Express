@@ -102,6 +102,22 @@ class dbHandler{
         const salt = await bcrypt.genSalt(saltRounds);
         return await bcrypt.hash(password, salt);
     }
+
+    // record new order
+    async addOrder(userId, checkoutDetails){
+        const orderDetails = {
+            userId,
+            ...checkoutDetails
+        };
+        const results = await this.ordersCollection.insertOne(orderDetails);
+        return results.insertedId;
+    }
+
+    // get user order history
+    async getOrderHistory(userId){
+        const query = { userId: new ObjectId(userId)};
+        return await this.ordersCollection.find(query).toArray();
+    }
 }
 
 let dbManager = new dbHandler();
