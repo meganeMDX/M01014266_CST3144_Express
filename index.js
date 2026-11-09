@@ -37,6 +37,67 @@ app.use(
 var morgan = require('morgan')
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 
+// log user in
+app.post("/login", async function(req, res)
+{
+    try{
+        const userDetails = req.body;
+        if(!userDetails || Object.keys(userDetails).length === 0){
+            return res.status(400).send("Missing required fields.");
+        }
+        const profile = await dbManager.login(userDetails);
+        if (profile){
+            req.session.userId= profile._id;
+            return res.status(201).json({login: true, user: profile });
+        }else{
+            return res.status(400).json({login: false, message: "Email or password is incorrect. Please try again." });
+        }
+        
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: "Log in failed."})        
+    }
+})
+
+// register user
+app.post("/register", async function(req, res)
+{
+    try{
+        const userDetails = req.body;
+        if(!userDetails || Object.keys(userDetails).length === 0){
+            return res.status(400).send("Missing required fields.");
+        }
+        const result = await dbManager.register(userDetails);
+        if (result.success){
+            req.session.userId = result.userId;
+            return res.status(201).json({login: true, userId: userId });
+        }else{
+            return res.status(400).json({login: false, message: result.message});
+        }
+        
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: "Register failed."})        
+    }
+})
+
+// logout
+app.delete("/login", async function(req, res)
+{
+    try{
+        if (!req.session.userId){
+            return res.status(401).json({login:false, message: "You must be logged in to logout."});
+        }
+
+        req.session.destroy();
+        res.status(200).json({login:false, message:"Logged out Successfully."})
+        
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: "Log out failed."})        
+    }
+})
+
 
 app.use((err, req, res) => {
     res.status(404).send("Page not found !")
