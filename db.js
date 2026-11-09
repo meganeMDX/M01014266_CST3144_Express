@@ -173,6 +173,67 @@ class dbHandler{
         }
         return {success: false, message: "Lesson not found."};
     }
+
+    // fetch all ratings made by a user
+    async getAllUserRatings(userId){
+        const query = {"userId": userId};
+        return await this.ratingsCollection.findOne(query);
+    }
+
+    // rate a lesson
+    async rateLesson(userId, lessonId, rating){
+        const query = { "userId": userId, "lessonId": lessonId};
+        const session = this.client.startSession();
+
+        let ratingResult;
+        try{
+            session.startTransaction();
+
+            // check if there is an existing rating
+            const existingRating =await this.ratingsCollection.findOne(query, {session});
+
+            let lessonUpdate;
+
+            if (existingRating){
+                const ratingDiff = rating - existingRating.rating;
+
+                // check if rating changed
+                if (ratingDiff === 0){
+                    return {success: true, message: "New rating is the same as previous rating."};
+                }
+                
+                // edit rating
+                await this.ratingsCollection.updateOne(query, {$set: {rating: rating}}, {session});
+                lessonUpdate = {$inc: {ratingTotal: ratingDiff}};
+
+            }else{
+                // new rating
+                const record = {
+                    userId: userId,
+                    lessonId: lessonId,
+                    rating: rating,
+                };
+
+                // add new ratings if it does not exist, else update
+                await this.ratingsCollection.insertOne(record, {session});
+                lessonUpdate = {$inc: {ratingTotal: rating, ratingCount: 1}};
+            }
+            const lessonResult = await this.updateLesson(query, lessonUpdate, {session});
+            if (!lessonResult.success){
+                return {success: false, message: lessonResult.message}
+            }
+
+            await session.commitTransaction();
+            return {success: true, message: "New rating recorded successfully."};
+
+        }catch(error){
+            await session.abortTransaction();
+            return {success: false, message: "Failed to record new rating."};
+
+        }finally{
+            session.endSession();
+        }
+    }
 }
 
 let dbManager = new dbHandler();
