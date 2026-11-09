@@ -183,6 +183,24 @@ app.put("/lesson/:lessonid", async function(req, res)
     }
 });
 
+// returns search results
+app.get("/lessons/search", async function(req, res)
+{
+    try{
+        if (!req.query.q){
+            return res.status(401).send("Missing query parameter");
+        }
+
+        const searchedText = req.query.q;
+        const results = await dbManager.searchLesson(searchedText);
+        res.status(200).json(results);
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: "Failed to retrieve search results"})
+    }
+});
+
 app.use((err, req, res) => {
     res.status(404).send("Page not found !")
 });
