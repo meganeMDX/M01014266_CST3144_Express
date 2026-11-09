@@ -201,6 +201,23 @@ app.get("/lessons/search", async function(req, res)
     }
 });
 
+// return order history of a user
+app.get("/history", async function(req, res)
+{
+    try{
+        if (!req.session.userId){
+            return res.status(401).json({login:false, message: "You must be logged in to view your order history."});
+        }
+        const orderHistory = await dbManager.getOrderHistory(req.session.userId);
+        res.status(200).json(orderHistory);
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: "Failed to retrieve order history of user."})
+
+    } 
+});
+
 app.use((err, req, res) => {
     res.status(404).send("Page not found !")
 });
