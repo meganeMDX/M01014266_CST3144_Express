@@ -118,6 +118,61 @@ class dbHandler{
         const query = { userId: new ObjectId(userId)};
         return await this.ordersCollection.find(query).toArray();
     }
+
+    // update lesson details
+    async updateLesson(lessonId, update, session={}){
+
+        // check attribute and value before updating
+        const stringAttr = ["topic", "category", "itemType", "location", "description", "imagePath", "scheduledDay"];
+        const floatAttr = ["price"];
+        const intAttr = ["space", "totalRating", "ratingCount"];
+        const dateAttr = ["scheduledStartTime", "scheduledEndTime"];
+        const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+        for (const [attribute, value] of Object.entries(update)){
+            if (attribute === "_id"){
+                return {success: false, message: "Cannot modify the lesson id."};
+            }
+                
+            else if (stringAttr.includes(attribute)){
+                if (typeof(value) !== "string"){
+                    return {success: false, message: `${attribute} must be a string.`};
+                }
+                if (attribute === "scheduledDay" && !days.includes(value.toLowerCase())){
+                    return {success: false, message: "scheduledDay must be a valid day of the week."};
+                }
+            }
+
+            else if (floatAttr.includes(attribute)){
+                if (typeof(value) !== "number" || value < 0){
+                    return {success: false, message: `${attribute} must be a number greater than or equal to 0.`};
+                }                
+            }
+
+            else if (intAttr.includes(attribute)){
+                if (!Number.isInteger(value) || value < 0){
+                    return {success: false, message: `${attribute} must be an integer greater or equal to 0.`};
+                }                
+            }
+
+            else if(dateAttr.includes(attribute)){
+                if (typeof(value) !== "string" || !timeRegex.test(value)){
+                    return {success: false, message: `${attribute} must be a time in HH:MM (24-hour) string format.`};
+                }
+            }
+            else{
+                // not an existing attribute
+                return {success: false, message: `${attribute} is an invalid attribute.`};
+            }
+        }
+
+        const query = { _id: new ObjectId(lessonId)};
+        const results = await this.lessonsCollection.updateOne(query, {$set: update}, session=session);
+        if (results.matchedCount === 1){
+            return {success: true, message: "Lesson updated successfully!"}
+        }
+        return {success: false, message: "Lesson not found."};
+    }
 }
 
 let dbManager = new dbHandler();
