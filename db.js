@@ -274,6 +274,23 @@ class dbHandler{
         };
         return await this.lessonsCollection.find(query).toArray();
     }
+
+    // get enrollment for a lesson
+    async getEnrolment(lessonId){
+        const result = await this.ordersCollection.aggregate([
+            {$unwind: "$lessonIDs"},
+            {
+                $match: {"lessonIDs.lessonId": new ObjectId(lessonId)}
+            },
+            {
+                $group:{
+                    _id: null,
+                    "enrolmentNumber":{$sum: "$lessonIDs.space"}
+                }
+            }
+        ]).toArray();
+        return result.length > 0 ? result[0].enrolmentNumber : 0;
+    }
 }
 
 let dbManager = new dbHandler();
