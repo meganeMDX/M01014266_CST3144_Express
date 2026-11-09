@@ -234,6 +234,19 @@ class dbHandler{
             session.endSession();
         }
     }
+
+    // save or unsave lesson for user
+    async saveUnsaveLesson(userId, lessonId, saving=true){
+        const query = {_id: new ObjectId(userId)};
+        let update;
+        if (saving){
+            update = {$addToSet: {savedLessonIDs : lessonId}};
+        }else{
+            update = {$pull: {savedLessonIDs : lessonId}};
+        }
+        const results = await this.usersCollection.updateOne(query, update);
+        return results.matchedCount === 1;
+    }
 }
 
 let dbManager = new dbHandler();
