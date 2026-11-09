@@ -267,6 +267,47 @@ app.put("/ratings", async function(req, res)
     } 
 });
 
+// save lesson
+app.put("/saved-lessons/:lessonid", async function(req, res)
+{
+    const lessonId = req.params.lessonid;
+    try{
+        if (!req.session.userId){
+            return res.status(401).json({login:false, message: "You must be logged in to save a lesson"});
+        }
+
+        const saved = await dbManager.saveUnsaveLesson(req.session.userId, lessonId, true);
+        if (saved){
+            return res.status(200).json({lessonSaved: true});
+        }
+        return res.status(404).json({lessonSaved: false});
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: `Failed to save lesson ${lessonId}.`})   
+    }
+});
+
+// removes from saved lessons
+app.delete("/saved-lessons/:lessonid", async function(req, res)
+{
+    const lessonId = req.params.lessonid;
+    try{
+        if (!req.session.userId){
+            return res.status(401).json({login:false, message: "You must be logged in remove from saved lesson"});
+        }
+        const unsaved = await dbManager.saveUnsaveLesson(req.session.userId, lessonId, false);
+        if (unsaved){
+            return res.status(200).json({lessonUnsaved: true});
+        }
+        return res.status(404).json({lessonUnsaved: false});
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: `Failed to remove lesson ${lessonId} from saved lists.`})   
+    }
+});
+
 app.use((err, req, res) => {
     res.status(404).send("Page not found !")
 });
