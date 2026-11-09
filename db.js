@@ -247,6 +247,33 @@ class dbHandler{
         const results = await this.usersCollection.updateOne(query, update);
         return results.matchedCount === 1;
     }
+
+    // search lessons
+    async searchLesson(searchedText){
+        const query = {
+            $or: [
+                {"topic": {"$regex" : searchedText, "$options": "i"}}, 
+                {"location": {"$regex" : searchedText, "$options": "i"}}, 
+                { $expr: 
+                    {
+                        $regexMatch: {
+                            input: {$toString: "$price"},
+                            regex : searchedText
+                        }
+                    }
+                }, 
+                { $expr: 
+                    {
+                        $regexMatch: {
+                            input: {$toString: "$space"},
+                            regex : searchedText
+                        }
+                    }
+                }
+            ]
+        };
+        return await this.lessonsCollection.find(query).toArray();
+    }
 }
 
 let dbManager = new dbHandler();
