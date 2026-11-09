@@ -159,6 +159,30 @@ app.post("/order", async function(req, res)
     }
 });
 
+// update a lesson
+app.put("/lesson/:lessonid", async function(req, res)
+{
+    const lessonID = req.params.lessonid;
+    try{
+        // query is passed in the body
+        const update = req.body;
+        if(!update || Object.keys(update).length === 0){
+            return res.status(400).send("Missing required fields.");
+        }
+
+        const result = await dbManager.updateLesson(lessonID, update);
+        if (result.success){
+            return res.status(200).json(result);
+        }
+        return res.status(404).json(result);
+ 
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: `Failed to update lesson ${lessonID}.`})
+
+    }
+});
+
 app.use((err, req, res) => {
     res.status(404).send("Page not found !")
 });
