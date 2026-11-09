@@ -1,5 +1,7 @@
 require("dotenv").config({ path: "./config.env" });
 const { MongoClient, ObjectId } = require("mongodb");
+const bcrypt = require('bcrypt');
+const saltRounds = 10; 
 
 class dbHandler{
     constructor(){
@@ -35,10 +37,70 @@ class dbHandler{
     async getLessons(){
         return await this.lessonsCollection.find({}).toArray();
     }
-    
+
     // get list of teachers
     async getTeachers(){
         return await this.teachersCollection.find({}).toArray();
+    }
+
+    async login(credentials){
+        const {email, password} = credentials;
+        const profile = await this.usersCollection.findOne({"email" : `${email}`})
+
+        // check if there is a corresponding profile
+        if (!profile){
+            return null;
+        }
+
+        // check if password entered is correct
+        const passwordMatch = await bcrypt.compare(password, profile.hashed_password);
+        if (!passwordMatch){
+            return null;
+        }
+        // remove password from profile returned
+        const profileReturned = {hashed_password, ...profile};
+
+        return profileReturned;
+    }
+
+    // create account
+    async register(userDetails){
+        const {full_name, new_email, new_password} = userDetails;
+        try{
+            const hashedPassowrd = await this.hashPassword(new_password)
+
+            const newUser = {
+                "name": full_name,
+                "email": new_email,
+                "hashed_password": hashedPassowrd,
+                "created_on": new Date(),
+                "savedLessonIDs" : []
+            }
+
+            // add new user to collection
+            const result = await this.usersCollection.insertOne(newUser);
+
+            return {
+                success: true,
+                userId: result.insertedId
+            };
+            
+        }catch(error){
+            // check if email is already in use
+            if (error.code === 11000){
+                return {
+                    success: false, 
+                    message: "This email is already in use."
+                };
+            }
+            throw error;
+        }
+    }
+
+    // hash password
+    async hashPassword(password){
+        const salt = await bcrypt.genSalt(saltRounds);
+        return await bcrypt.hash(password, salt);
     }
 }
 
