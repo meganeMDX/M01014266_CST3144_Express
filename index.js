@@ -21,7 +21,7 @@ app.use('/images', (err, req, res, next) => {
         return res.status(404).send("Image not found.");
     }
     return res.status(500).send("Failed to load image.");
-})
+});
 
 // to use express session
 app.use(
@@ -57,7 +57,7 @@ app.post("/login", async function(req, res)
         console.log(err);
         res.status(500).json({ message: "Log in failed."})        
     }
-})
+});
 
 // register user
 app.post("/register", async function(req, res)
@@ -79,7 +79,7 @@ app.post("/register", async function(req, res)
         console.log(err);
         res.status(500).json({ message: "Register failed."})        
     }
-})
+});
 
 // logout
 app.delete("/login", async function(req, res)
@@ -96,7 +96,7 @@ app.delete("/login", async function(req, res)
         console.log(err);
         res.status(500).json({ message: "Log out failed."})        
     }
-})
+});
 
 // returns all lessons and activities
 app.get("/lessons", async function(req, res)
@@ -136,7 +136,28 @@ app.get("/enrolment/:lessonid", async function(req, res)
         console.log(err);
         res.status(500).json({ message: `Failed to retrieve the enrolment number for lesson ${lessonID}.`})
     }
-})
+});
+
+// saves a new order
+app.post("/order", async function(req, res)
+{
+    try{
+        if (!req.session.userId){
+            return res.status(401).json({login:false, message: "You must be logged in to place an order."});
+        }
+
+        const orderDetails = req.body;
+        if(!orderDetails || Object.keys(orderDetails).length === 0){
+            return res.status(400).send("Missing required fields.");
+        }
+        const orderId = await dbManager.addOrder(req.session.userId, orderDetails);
+        res.status(201).send({message:"Order has been submitted successfully!", orderId});
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: "Failed to place order." })
+    }
+});
 
 app.use((err, req, res) => {
     res.status(404).send("Page not found !")
@@ -144,4 +165,4 @@ app.use((err, req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);
-})
+});
