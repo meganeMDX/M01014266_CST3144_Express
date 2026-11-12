@@ -329,14 +329,14 @@ class dbHandler{
     // get enrollment for a lesson
     async getEnrolment(lessonId){
         const result = await this.ordersCollection.aggregate([
-            {$unwind: "$lessonIDs"},
+            {$unwind: "$lessons"},
             {
-                $match: {"lessonIDs.lessonId": new ObjectId(lessonId)}
+                $match: {"lessons.lessonId": lessonId}
             },
             {
                 $group:{
                     _id: null,
-                    "enrolmentNumber":{$sum: "$lessonIDs.space"}
+                    "enrolmentNumber":{$sum: "$lessons.space"}
                 }
             }
         ]).toArray();
