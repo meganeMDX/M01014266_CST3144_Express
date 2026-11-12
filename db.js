@@ -227,22 +227,22 @@ class dbHandler{
 
     // fetch all ratings made by a user
     async getAllUserRatings(userId){
-        const query = {"userId": userId};
-        return await this.ratingsCollection.findOne(query);
+        const query = { userId: new ObjectId(userId)};
+        return await this.ratingsCollection.find(query).toArray();
     }
 
     // rate a lesson
     async rateLesson(userId, lessonId, rating){
-        const query = { "userId": userId, "lessonId": lessonId};
+        const query = { "userId": new ObjectId(userId), "lessonId": new ObjectId(lessonId)};
         const session = this.client.startSession();
 
-        let ratingResult;
         try{
             session.startTransaction();
 
             // check if there is an existing rating
             const existingRating = await this.ratingsCollection.findOne(query, {session});
 
+            let ratingResult;
             let lessonUpdate;
 
             if (existingRating){
@@ -257,32 +257,32 @@ class dbHandler{
                 // edit existing rating
                 await this.ratingsCollection.updateOne(query, {$set: {rating: rating}}, {session});
                 ratingResult ={...existingRating, rating};
-                lessonUpdate = {$inc: {ratingTotal: ratingDiff}};
+                lessonUpdate = {$inc: {totalRating: ratingDiff}};
 
             }else{
                 // add a new rating
                 const record = {
-                    userId: userId,
-                    lessonId: lessonId,
+                    ... query,
                     rating: rating,
                 };
 
                 // add new ratings if it does not exist, else update
                 const result = await this.ratingsCollection.insertOne(record, {session});
                 ratingResult ={_id: result.insertedId, ...record};
-                lessonUpdate = {$inc: {ratingTotal: rating, ratingCount: 1}};
+                lessonUpdate = {$inc: {totalRating: rating, ratingCount: 1}};
             }
-            const lessonResult = await this.updateLesson(query, lessonUpdate, {session});
-            if (!lessonResult.success){
+            const lessonResult = await this.lessonsCollection.updateOne({_id: new ObjectId(lessonId)}, lessonUpdate, {session});
+            if (lessonResult.matchedCount === 0){
                 await session.abortTransaction();
-                return {success: false, message: lessonResult.message}
+                return {success: false, message: "Lesson not found."};
             }
 
             await session.commitTransaction();
             return {success: true, message: "Rating submitted successfully.", ratingObj: ratingResult};
 
-        }catch(error){
+        }catch(err){
             await session.abortTransaction();
+            console.log(err);
             return {success: false, message: "Failed to record new rating."};
 
         }finally{

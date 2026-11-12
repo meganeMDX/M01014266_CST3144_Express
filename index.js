@@ -230,7 +230,7 @@ app.get("/history", async function(req, res)
 });
 
 // get ratings made by a user
-app.get("ratings", async function(req, res)
+app.get("/ratings", async function(req, res)
 {
     try{
         if (!req.session.userId){
