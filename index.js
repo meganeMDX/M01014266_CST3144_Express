@@ -148,14 +148,17 @@ app.post("/order", async function(req, res)
 
         const orderDetails = req.body;
         if(!orderDetails || Object.keys(orderDetails).length === 0){
-            return res.status(400).send("Missing required fields.");
+            return res.status(400).json({success: false, message: "Missing required fields."});
         }
-        const orderId = await dbManager.addOrder(req.session.userId, orderDetails);
-        res.status(201).send({message:"Order has been submitted successfully!", orderId});
+        const results = await dbManager.addOrder(req.session.userId, orderDetails);
+        if (results.success){
+            return res.status(201).json(results);
+        }
+        return res.status(400).json(results);
 
     }catch(err){
         console.log(err);
-        res.status(500).json({ message: "Failed to place order." })
+        res.status(500).json({success: false, message: "Failed to place order." })
     }
 });
 
