@@ -108,12 +108,60 @@ class dbHandler{
 
     // record new order
     async addOrder(userId, checkoutDetails){
+        const {name, phoneNumber, lessons} = checkoutDetails;
+        console.log("Lessons received:", lessons);
+        // validate order details
+        if (!name.trim() || !phoneNumber.trim() || !Array.isArray(lessons) || lessons.length === 0){
+            return {success: false, message: "Invalid order details"};
+        }
+
+        // validate quantities
+        for (const item of lessons){
+            if (!Number.isInteger(item.space) || item.space <= 0){
+                return {success: false, message: "Invalid lesson quantities"};
+            }
+        }
+
+        // retrieve lessons
+        const lessonIDs = lessons.map(lesson => new ObjectId(lesson.lessonId));
+        const lessonDetails = await this.lessonsCollection.find({'_id': {'$in': lessonIDs}}).toArray();
+
+        // check if incorrect IDs were passed
+        if (lessonDetails.length !== lessons.length){
+            return {success: false, message: "One or more lessons could not be found."};
+        }
+
+        // calculate order total price
+        let totalPrice = 0;
+
+        for (const item of lessons){
+
+            const lesson = lessonDetails.find(l => l._id.toString() === item.lessonId);
+            
+            console.log("Lesson ID:", item.lessonId);
+            console.log("Lesson details:", lessonDetails);
+            // check availability
+            if (lesson.space < item.space){
+                return {success: false, message: `Not enough spaces available for ${lesson.topic}`};
+            };
+            totalPrice += lesson.price * item.space;
+        }
+
+        // save to database
         const orderDetails = {
             userId,
-            ...checkoutDetails
+            name,
+            phoneNumber,
+            lessons,
+            totalPrice,
+            orderDate: new Date()
         };
         const results = await this.ordersCollection.insertOne(orderDetails);
-        return results.insertedId;
+        return {
+            success: true, 
+            message:"Order has been submitted successfully!",
+            recordedOrder: {_id: results.insertedId, ...orderDetails}
+        };
     }
 
     // get user order history
