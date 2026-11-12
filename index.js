@@ -5,11 +5,29 @@ const PORT = 3000;
 const path = require('path');
 const expressSession = require('express-session');
 const cors = require('cors');
-app.use(cors());
+
+app.use(cors({
+    origin: 'http://127.0.0.1:5500',
+    credentials: true
+}));
+
 app.use(express.json());
 
 // set up database connection
 dbManager.connectToMongoDB();
+
+// to use express session
+app.use(
+    expressSession({
+        secret: process.env.COOKIE_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        cookie:{
+            httpOnly: true,
+            maxAge: 1000 * 60 * 60 * 24
+        }
+    })
+);
 
 //Load and serve static images
 app.use('/images', express.static(path.join(__dirname, 'images'), {fallthrough: false}));
@@ -22,16 +40,6 @@ app.use('/images', (err, req, res, next) => {
     }
     return res.status(500).send("Failed to load image.");
 });
-
-// to use express session
-app.use(
-    expressSession({
-        secret: process.env.COOKIE_SECRET,
-        cookie: {maxAge: 1000 * 60 * 60 * 24},
-        resave: false,
-        saveUninitialized: false
-    })
-);
 
 // log requests
 var morgan = require('morgan')
@@ -69,8 +77,8 @@ app.post("/register", async function(req, res)
         }
         const result = await dbManager.register(userDetails);
         if (result.success){
-            req.session.userId = result.userId;
-            return res.status(201).json({login: true, userId: userId });
+            req.session.userId = result.user._id;
+            return res.status(201).json({login: true, user: result.user });
         }else{
             return res.status(400).json({login: false, message: result.message});
         }
@@ -266,7 +274,7 @@ app.put("/ratings", async function(req, res)
 
     }catch(err){
         console.log(err);
-        res.status(500).json({ message: "Failed to rate lesson."})
+        res.status(500).json({ success: false, message: "Failed to rate lesson."})
     } 
 });
 
@@ -311,7 +319,7 @@ app.delete("/saved-lessons/:lessonid", async function(req, res)
     }
 });
 
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
     res.status(404).send("Page not found !")
 });
 
