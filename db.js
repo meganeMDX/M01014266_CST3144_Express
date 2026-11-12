@@ -65,24 +65,27 @@ class dbHandler{
 
     // create account
     async register(userDetails){
-        const {full_name, new_email, new_password} = userDetails;
+        const {fullName, email, password} = userDetails;
         try{
-            const hashedPassowrd = await this.hashPassword(new_password)
+            const hashedPassowrd = await this.hashPassword(password)
 
             const newUser = {
-                "name": full_name,
-                "email": new_email,
-                "hashed_password": hashedPassowrd,
-                "created_on": new Date(),
+                "name": fullName,
+                "email": email,
+                "hashedPassword": hashedPassowrd,
+                "createdOn": new Date(),
                 "savedLessonIDs" : []
             }
 
             // add new user to collection
             const result = await this.usersCollection.insertOne(newUser);
-
+            
             return {
                 success: true,
-                userId: result.insertedId
+                user: {
+                    _id: result.insertedId, 
+                    ...newUser
+                }
             };
             
         }catch(error){
