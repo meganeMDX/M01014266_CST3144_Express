@@ -335,7 +335,7 @@ class dbHandler{
         const result = await this.ordersCollection.aggregate([
             {$unwind: "$lessons"},
             {
-                $match: {"lessons.lessonId": lessonId}
+                $match: {"lessons.lessonId": new ObjectId(lessonId)}
             },
             {
                 $group:{
