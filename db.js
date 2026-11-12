@@ -43,6 +43,16 @@ class dbHandler{
         return await this.teachersCollection.find({}).toArray();
     }
 
+    async findProfile(userId){
+        const query = {'_id': new ObjectId(userId)};
+        const profile = await this.usersCollection.findOne(query);
+        if (!profile){
+            return null;
+        }
+        const {hashedPassword, ...profileReturned} = profile;
+        return profileReturned;
+    }
+
     async login(credentials){
         const {email, password} = credentials;
         const profile = await this.usersCollection.findOne({"email" : `${email}`})

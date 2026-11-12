@@ -45,6 +45,25 @@ app.use('/images', (err, req, res, next) => {
 var morgan = require('morgan')
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
 
+// to get login status and user info
+app.get("/login", async function(req, res){
+    try{
+        if(!req.session.userId){
+            return res.status(400).json({login:false});
+        }
+        const profile = await dbManager.findProfile(req.session.userId);
+        if (!profile){
+            req.session.destroy();
+            return res.status(401).json({login:false, message:"Failed to user profile information." });
+        }
+        return res.status(201).json({login:true, user: profile });
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ login:false, message: "Failed to retrieve user information."})        
+    }
+});
+
 // log user in
 app.post("/login", async function(req, res)
 {
@@ -63,7 +82,7 @@ app.post("/login", async function(req, res)
         
     }catch(err){
         console.log(err);
-        res.status(500).json({ message: "Log in failed."})        
+        res.status(500).json({ login:false, message: "Log in failed."})        
     }
 });
 
@@ -85,7 +104,7 @@ app.post("/register", async function(req, res)
         
     }catch(err){
         console.log(err);
-        res.status(500).json({ message: "Register failed."})        
+        res.status(500).json({ login:false, message: "Register failed."})        
     }
 });
 
