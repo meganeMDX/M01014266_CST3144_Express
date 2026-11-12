@@ -135,8 +135,8 @@ class dbHandler{
         let totalPrice = 0;
 
         for (const item of lessons){
-
             const lesson = lessonDetails.find(l => l._id.toString() === item.lessonId);
+            item.lessonId = new ObjectId(item.lessonId);
             
             console.log("Lesson ID:", item.lessonId);
             console.log("Lesson details:", lessonDetails);
@@ -149,7 +149,7 @@ class dbHandler{
 
         // save to database
         const orderDetails = {
-            userId,
+            userId: new ObjectId(userId),
             name,
             phoneNumber,
             lessons,
@@ -295,9 +295,9 @@ class dbHandler{
         const query = {_id: new ObjectId(userId)};
         let update;
         if (saving){
-            update = {$addToSet: {savedLessonIDs : lessonId}};
+            update = {$addToSet: {savedLessonIDs : new ObjectId(lessonId)}};
         }else{
-            update = {$pull: {savedLessonIDs : lessonId}};
+            update = {$pull: {savedLessonIDs : new ObjectId(lessonId)}};
         }
         const results = await this.usersCollection.updateOne(query, update);
         return results.matchedCount === 1;
