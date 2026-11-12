@@ -241,7 +241,7 @@ class dbHandler{
             session.startTransaction();
 
             // check if there is an existing rating
-            const existingRating =await this.ratingsCollection.findOne(query, {session});
+            const existingRating = await this.ratingsCollection.findOne(query, {session});
 
             let lessonUpdate;
 
@@ -250,15 +250,17 @@ class dbHandler{
 
                 // check if rating changed
                 if (ratingDiff === 0){
-                    return {success: true, message: "New rating is the same as previous rating."};
+                    await session.commitTransaction();
+                    return {success: true, message: "New rating is the same as previous rating.", ratingObj: existingRating};
                 }
                 
-                // edit rating
+                // edit existing rating
                 await this.ratingsCollection.updateOne(query, {$set: {rating: rating}}, {session});
+                ratingResult ={...existingRating, rating};
                 lessonUpdate = {$inc: {ratingTotal: ratingDiff}};
 
             }else{
-                // new rating
+                // add a new rating
                 const record = {
                     userId: userId,
                     lessonId: lessonId,
@@ -266,23 +268,25 @@ class dbHandler{
                 };
 
                 // add new ratings if it does not exist, else update
-                await this.ratingsCollection.insertOne(record, {session});
+                const result = await this.ratingsCollection.insertOne(record, {session});
+                ratingResult ={_id: result.insertedId, ...record};
                 lessonUpdate = {$inc: {ratingTotal: rating, ratingCount: 1}};
             }
             const lessonResult = await this.updateLesson(query, lessonUpdate, {session});
             if (!lessonResult.success){
+                await session.abortTransaction();
                 return {success: false, message: lessonResult.message}
             }
 
             await session.commitTransaction();
-            return {success: true, message: "New rating recorded successfully."};
+            return {success: true, message: "Rating submitted successfully.", ratingObj: ratingResult};
 
         }catch(error){
             await session.abortTransaction();
             return {success: false, message: "Failed to record new rating."};
 
         }finally{
-            session.endSession();
+            await session.endSession();
         }
     }
 
