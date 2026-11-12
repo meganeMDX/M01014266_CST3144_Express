@@ -53,12 +53,12 @@ class dbHandler{
         }
 
         // check if password entered is correct
-        const passwordMatch = await bcrypt.compare(password, profile.hashed_password);
+        const passwordMatch = await bcrypt.compare(password, profile.hashedPassword);
         if (!passwordMatch){
             return null;
         }
         // remove password from profile returned
-        const profileReturned = {hashed_password, ...profile};
+        const {hashedPassword, ...profileReturned} = profile;
 
         return profileReturned;
     }
