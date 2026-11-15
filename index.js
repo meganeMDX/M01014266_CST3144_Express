@@ -6,6 +6,8 @@ const path = require('path');
 const expressSession = require('express-session');
 const cors = require('cors');
 
+app.set('trust proxy', 1);
+
 app.use(cors({
     origin: 'https://meganemdx.github.io',
     credentials: true
