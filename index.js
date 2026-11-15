@@ -1,13 +1,13 @@
 const { dbManager } = require("./db.js");
 const express = require('express');
 const app = express();
-const PORT = 3000;
+const port = process.env.PORT || 3000;
 const path = require('path');
 const expressSession = require('express-session');
 const cors = require('cors');
 
 app.use(cors({
-    origin: 'http://127.0.0.1:5500',
+    origin: 'https://meganemdx.github.io',
     credentials: true
 }));
 
@@ -342,6 +342,6 @@ app.use((err, req, res, next) => {
     res.status(404).send("Page not found !")
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}/`);
+app.listen(port, () => {
+    console.log("App started on port " + port);
 });
