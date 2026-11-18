@@ -77,12 +77,12 @@ class dbHandler{
     async register(userDetails){
         const {fullName, email, password} = userDetails;
         try{
-            const hashedPassword = await this.hashPassword(password);
+            const passwordHashed = await this.hashPassword(password);
 
             const newUser = {
                 "name": fullName,
                 "email": email,
-                "hashedPassword": hashedPassword,
+                "hashedPassword": passwordHashed,
                 "createdOn": new Date(),
                 "savedLessonIDs" : []
             }
