@@ -77,24 +77,25 @@ class dbHandler{
     async register(userDetails){
         const {fullName, email, password} = userDetails;
         try{
-            const hashedPassowrd = await this.hashPassword(password)
+            const hashedPassword = await this.hashPassword(password);
 
             const newUser = {
                 "name": fullName,
                 "email": email,
-                "hashedPassword": hashedPassowrd,
+                "hashedPassword": hashedPassword,
                 "createdOn": new Date(),
                 "savedLessonIDs" : []
             }
 
             // add new user to collection
             const result = await this.usersCollection.insertOne(newUser);
+            const {hashedPassword, ...profileReturned} = newUser;
             
             return {
                 success: true,
                 user: {
                     _id: result.insertedId, 
-                    ...newUser
+                    ... profileReturned
                 }
             };
             
